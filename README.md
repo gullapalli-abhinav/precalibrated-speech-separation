@@ -22,6 +22,9 @@ The app saves the original mixture, both voice estimates, and the selected debat
 ## Review the project
 
 - [Micro-project report](docs/Group%23Report.pdf) gives the method, results, and references.
+- [Real-time code PDF](docs/submission/Group%23Code.pdf) includes the runnable Python source as an attachment.
+- [Combined analysis PDF](docs/submission/Group%23Results.pdf) contains the plots for all four sessions.
+- [Teacher submission ZIP](docs/submission/Group%23Submission.zip) contains the three PDFs and a separate folder for the WAV recordings.
 - [Four session guides](outputs/realtime/sessions/README.md) explain which tracks and figures to compare. The recordings and figures are available on GitHub.
 - [Technical notes](docs/realtime_dsp_architecture.md) cover the formulas and how to regenerate the plots. [Development results](outputs/realtime/realtime_report.md) document the controlled tests and device measurements.
 - [Older offline results](docs/offline-results/) accompany the [optimization report](docs/optimization_report.md). The original offline release is tagged `v0.1.0-offline`.
