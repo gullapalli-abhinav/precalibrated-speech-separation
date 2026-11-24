@@ -266,10 +266,10 @@ class LiveAudio:
             self.anchors.popleft()
         index, timestamp = self.anchors[0]
         tick = round(timestamp*RATE)+self.source_pos-index
-        selected, events = self.router.apply(tick, estimates, mix)
-        selected = np.clip(selected*self.volume,-1,1)
+        routed, events = self.router.apply(tick, estimates, mix)
+        selected = np.clip(routed*self.volume,-1,1)
         if self.recorder is not None:
-            self.recorder.submit(((mix,selected,*estimates.T),
+            self.recorder.submit(((mix,routed,*estimates.T),
                 [(self.source_pos+t-tick,*rest) for t,*rest in events],
                 (self.source_pos,1000*self.engine.times[-1],self.engine.misses,len(self.input),len(self.output))))
         self.source_pos += len(estimates)

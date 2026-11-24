@@ -9,7 +9,7 @@ from scipy.signal import firwin, upfirdn
 
 from config import DEFAULT
 from src.calibration import write_json
-from src.debate_controller import Controller, RATE
+from src.debate_controller import Controller, RATE, Router
 from src.enrollment import enroll, read_session, session_profiles
 from src.live_audio import Converter, LiveAudio, Recorder, Ring, record_sample
 from test_dsp import harmonic
@@ -130,6 +130,16 @@ class DeviceTests(TestCase):
         np.testing.assert_allclose(female,expected[0],atol=1e-6)
         np.testing.assert_allclose(male,expected[1],atol=1e-6)
         np.testing.assert_allclose(selected,np.r_[male[:1600],female[1600:]],atol=1e-6)
+        a.volume = .15
+        a.source_pos = 0
+        a.router = Router(ctl,fade_ms=0)
+        a.mixture = x.copy()
+        a.recorder.submit.reset_mock()
+        a._emit(np.column_stack((expected[0],expected[1])))
+        recorded = a.recorder.submit.call_args.args[0][0][1]
+        played = a.output.data[:len(a.output)]
+        self.assertGreater(np.max(np.abs(recorded)),0)
+        np.testing.assert_allclose(played,recorded*.15,atol=1e-7)
 
     def test_optional_recorder_drains_aligned_tracks(self):
         with TemporaryDirectory() as d, mock.patch("src.live_audio.OUTPUT",Path(d)):
