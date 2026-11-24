@@ -68,7 +68,7 @@ Values are arithmetic means across −10, −5, 0, +5 and +10 dB female-to-male 
 | W32 | 4.62 | −1.76 | 11.54 | 10.47 | −7.99 | −5.20 |
 | W64 | **6.74** | **−0.93** | **13.01** | 10.72 | −6.98 | −6.35 |
 
-The isolated C confidence and width controls averaged 5.81 and 5.83 dB SI-SDRi. Reducing only final time smoothing, only frequency smoothing or only fitted-band smoothing gave 5.79, 5.87 and 5.54 dB. G moved ambiguous shares toward one half, which can also reduce the gain of already male-dominant bins. Its softer setting traded additional leakage for little envelope improvement. [All 240 split, ratio and variant scores](metrics.csv) · [Experiment averages](experiment_results.csv) · [Bandwise comparison plot](comparisons/preservation_and_leakage.png)
+The isolated C confidence and width controls averaged 5.81 and 5.83 dB SI-SDRi. Reducing only final time smoothing, only frequency smoothing or only fitted-band smoothing gave 5.79, 5.87 and 5.54 dB. G moved ambiguous shares toward one half, which can also reduce the gain of already male-dominant bins. Its softer setting traded additional leakage for little envelope improvement. [All 240 split, ratio and variant scores](metrics.csv) · [Experiment averages](experiment_results.csv) · [Bandwise comparison plot](offline-results/preservation_and_leakage.png)
 
 | Female-to-male RMS | Female, all variants | Male A | Male D | Male F | Male H | Male W64 |
 |---:|---:|---:|---:|---:|---:|---:|
