@@ -1,12 +1,50 @@
 # Pre-Calibrated Single-Channel Speech Separation Using Classical DSP
 
-**Version:** v0.1.0-offline
-**Stage:** Pre-calibrated offline prototype
-**Processing:** Recorded audio, non-real-time
+The `realtime-development` branch adds a local, single-microphone debate console. The tagged `v0.1.0-offline` release on `main` processes prerecorded mono audio with two prerecorded calibration samples. Its CLI and historical experiments are available on this branch.
 
-Individual speaker recordings are collected beforehand for calibration. The system accepts prerecorded single-channel mixed speech and writes individual estimates and a selectable mute output. Live microphone streaming is not implemented. Centered frames and offline trajectory tracking can use future audio. Faster-than-real-time throughput does not make this a real-time system. Streaming selective muting is a future milestone.
+## Real-Time Pre-Calibrated Selective Muting — Development Version
 
-An offline Python prototype for two calibrated speakers sharing one microphone. Given one mono mixture, it generates estimates of each speaker, a mixture copy, and a selectable output. It uses classical DSP throughout.
+Two enrolled speakers share one microphone. A fixed-lag classical separator estimates both voices every 10 ms. The debate timer or moderator selects the output. During simultaneous speech, the output can contain residual interference. The labels “male” and “female” identify the two enrollment slots. Each slot has its own recorded pitch distribution, LPC and spectral exemplars.
+
+### Start on Windows
+
+Use Python with Tkinter, one microphone, and headphones on a compatible full-duplex device pair. Disable Windows **Listen to this device**, direct microphone monitoring, and any loopback input. Keep speakers acoustically isolated if headphones are unavailable. Lower gain reduces level but cannot remove acoustic feedback. The application performs no echo cancellation.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe realtime_app.py
+```
+
+With an activated environment the launch command is `python realtime_app.py`. Use **Refresh** and select the input and output. The device number identifies each endpoint in `python hardware_check.py --devices`. Prefer devices from one host API, for example a WASAPI microphone and WASAPI headphones. **Test input + quiet tone** plays a short tone and reports microphone peak. Debate playback starts at 15% volume. Raise it gradually.
+
+1. **Enroll both speakers.** Select 30, 45, 60, or 90 seconds and use **Record / recalibrate**. Speak alone in the same position and room as the debate. Watch the input meter and countdown. An enrollment with too little active or reliably pitched speech, a short capture, or excessive clipping prompts a retry. **Import WAV** accepts an isolated recording, averages channels and resamples to 16 kHz. Import uses the entire enrollment file. Keep evaluation references separate.
+2. **Reuse profiles.** Save both locally as a `*.profile.json` file, or load a compatible 40 ms offline profile with calibrated band-power exemplars. New enrollments include the 2 ms cepstral bank for the male estimate. The application uses both fixed banks for the entire session. To replace a speaker, stop and recalibrate that slot.
+3. **Configure turns.** Enter positive durations, the starting speaker, a crossfade from 0 to 100 ms (default 20), and rounds (0 means continuous). **Start** opens the full-duplex stream. Automatic mode alternates at the scheduled times, including during silence. **Next speaker** advances one turn and restarts its countdown. One round comprises two turns.
+4. **Moderate manually.** Male, Female, Both and Mute switch to manual routing. Both passes the captured mixture. Mute silences the public output. The timer freezes in manual mode. Enabling automatic mode continues the displayed speaker with its remaining time. Pause silences playback and freezes time while the separator continues tracking. Resume discards pre-resume queued playback and continues the turn. Stop closes the device. Start opens a new session.
+5. **Record only when wanted.** Enable **Record next session locally** before starting. Four aligned 16 kHz PCM WAVs, turn sample indices and per-block diagnostics go under `outputs/realtime/sessions/`. The selected track includes the configured volume. Device underruns, hardware gain, and emergency playback gates are downstream of this track. Enrollment audio stays in memory unless you separately save its derived profile. Keep these files local.
+
+The DSP requires at most 60 ms of input beyond the start of an emitted hop. Device periods, conversion, computation, and output buffering add latency. The display uses driver timestamps when available. A physical loopback measurement requires a separate reference capture. See the [development report](outputs/realtime/realtime_report.md) for quality, timing, and device tests.
+
+### Reproduce and validate
+
+```powershell
+python -m unittest discover -s tests -v
+python streaming_evaluation.py select
+python streaming_evaluation.py final
+python streaming_evaluation.py debate
+```
+
+The replay commands use the established local calibration and reference WAVs under `outputs/optimization/`. On a fresh checkout supply your two isolated source recordings at the paths below first. Run `python optimization.py development`, then `python optimization.py validation`, and finally `python optimization.py test` to populate the original partitions and ratio fixtures. The historical development protocol requires recordings long enough for its 12-second disjoint excerpt. Selection tests 20, 30 and 50 ms pitch lag. Final scores use the fixed 20 ms configuration. Debate replay generates four private WAVs, a transition plot and a turn CSV in `outputs/realtime/debate/`.
+
+**Physical acceptance check.** Connect headphones before beginning. Load profiles, set 3 s / 4 s and two rounds, and have each enrolled speaker read alone, then together, including a quiet authorized speaker. Listen during both turns. Try Next, Both, Mute, Pause, Resume and a second Start. Confirm that the remaining time freezes on pause and that the last round stops. Log any clicks, muffled consonants, audible leakage or recurring counter increases. Repeat with the intended room, hardware and a full-length debate. For a silent device stress check use the following command with IDs from **your** machine.
+
+```powershell
+python hardware_check.py --devices
+python hardware_check.py --input 9 --output 8 --profiles outputs/profiles.json --seconds 300
+```
+
+If devices do not open, check OS microphone access, close exclusive-mode applications, refresh, and choose a pair on the same host API. The app tries supported common rates including 16, 48 and 44.1 kHz. If the input meter stays low, check the microphone and its OS gain before recalibrating. A full input/output ring or a capture discontinuity ends the session with an error. Stop, check the device and CPU load, then restart. Similar timbres, shared harmonics, background noise and changed microphone placement can all reduce suppression. Use the local reference-based replay to distinguish routing problems from separation errors.
 
 ## Optimized separator
 
@@ -132,15 +170,6 @@ The 67.03 s physical capture produced estimates with median tracked F0s of 207.5
 
 On this Windows run the harmonic method processed the real recording in about 3.97 s, roughly 0.59 ms per frame and a 0.059 real-time factor. LPC used about 4.40 s and a 0.066 real-time factor. Eleven automated tests passed, including reconstruction with absolute tolerance `1e-12`, known synthetic pitches, exact WAV sums, and calibration partition isolation. CLI checks verified selection and profile reuse on a new mixture. The offline throughput leaves compute headroom for a streaming version, whose buffering and latency still need measurement.
 
-## Toward live streaming
+## Historical offline release and next work
 
-Use a mono callback and a bounded ring buffer, and move DSP off the audio callback. Carry the analysis window, pitch-state costs, mask smoothing and overlap-add state between blocks. Replace full-recording backtracking with a fixed-lag decoder and use a causal or bounded-lookahead smoother. Estimate the activity threshold online and measure end-to-end latency, underruns, peak CPU load and behavior on speaker changes. The current centered window alone requires 20 ms of future signal, and offline pitch backtracking uses the entire sequence.
-
-
-## Repository release
-
-This is version `v0.1.0-offline`, a pre-calibrated offline prototype. It does not support live microphone streaming. The reported 0.089 real-time factor is an offline throughput measurement, not a real-time capability. See `docs/optimization_report.md` and `docs/male_intelligibility_report.md` for experimental methodology, results and limitations. Aggregate tables and selected diagnostic figures are in `results/`. Human listening scores have not been collected.
-
-### Planned work
-
-Validate male output choices through listening and synchronized references from another session, then evaluate additional speakers and rooms. Develop bounded-lookahead tracking and causal smoothing before implementing live capture and mute controls.
+The stable tag `v0.1.0-offline` identifies the pre-calibrated, non-real-time prototype. Its 0.089 real-time factor is an offline throughput measurement. The optimization and male intelligibility studies are preserved in `docs/`, with aggregate tables and selected figures in `results/`. Next validation steps include blinded listening, synchronized close-microphone references, physical loopback latency, and additional speakers and rooms.

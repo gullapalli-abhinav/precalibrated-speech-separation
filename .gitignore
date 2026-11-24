@@ -42,7 +42,10 @@ htmlcov/
 **/*profile*.json
 
 # Generated audio, evaluation output and large experimental artifacts
-/outputs/
+/outputs/*
+!/outputs/realtime/
+/outputs/realtime/*
+!/outputs/realtime/realtime_report.md
 *.zip
 *.npy
 *.npz

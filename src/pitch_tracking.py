@@ -1,6 +1,7 @@
 """Pitch evidence and offline dual-speaker dynamic programming."""
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 from scipy import fft, ndimage, signal
@@ -91,10 +92,22 @@ def harmonic_grid(pitch: np.ndarray, freq: np.ndarray, bin_hz: float) -> np.ndar
     return likelihood * (pitch[..., None] > 0)
 
 
+@lru_cache(maxsize=8)
+def spectral_comb(cfg: Settings, resolution: int):
+    freq = fft.rfftfreq(resolution * cfg.fft, 1 / cfg.rate)
+    band = (freq >= cfg.pitch_min - 15) & (freq <= 3500)
+    grid = pitch_grid(cfg)
+    f = freq[band]
+    pitch = grid[:, None]
+    nearest = np.maximum(np.rint(f / pitch), 1) * pitch
+    width = np.minimum(0.77 * cfg.rate / cfg.fft + 0.004 * f, 0.18 * pitch)
+    comb = np.exp(-0.5 * ((f - nearest) / width) ** 2).astype(np.float32)
+    return comb
+
+
 def spectral_evidence(data: Frames, cfg: Settings, *, refined: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     resolution = 2 if refined else 1
     freq = fft.rfftfreq(resolution * cfg.fft, 1 / cfg.rate)
-    grid = pitch_grid(cfg)
     band = (freq >= cfg.pitch_min - 15) & (freq <= 3500)
     # Score local spectral peaks so a second voice can be detected between the
     # dominant voice's harmonics. Synthesis uses a wider, independent comb.
@@ -105,11 +118,7 @@ def spectral_evidence(data: Frames, cfg: Settings, *, refined: bool = False) -> 
     maxima &= magnitude >= 0.015 * magnitude.max(axis=1, keepdims=True)
     peaks = (whitened[:, band] * np.sqrt(magnitude[:, band]) * maxima[:, band]).astype(np.float32)
     peaks /= np.maximum(peaks.sum(axis=1, keepdims=True), EPS)
-    f = freq[band]
-    pitch = grid[:, None]
-    nearest = np.maximum(np.rint(f / pitch), 1) * pitch
-    width = np.minimum(0.77 * cfg.rate / cfg.fft + 0.004 * f, 0.18 * pitch)
-    comb = np.exp(-0.5 * ((f - nearest) / width) ** 2).astype(np.float32)
+    comb = spectral_comb(cfg, resolution)
     # A dense comb covers more spectral bins by chance. Subtract that coverage.
     harmonic = peaks @ comb.T - comb.mean(axis=1)
     return harmonic, peaks, comb
@@ -144,8 +153,7 @@ class Tracks:
     confidence: np.ndarray
 
 
-def track(data: Frames, profiles: dict, cfg: Settings, *, legacy: bool = False,
-          transition_scale: float | None = None, refined: bool | None = None, diagnostics: dict | None = None) -> Tracks:
+def pitch_candidates(data, profiles, cfg, *, legacy=False, refined=None, diagnostics=None):
     grid = pitch_grid(cfg)
     ac, cep = periodicity(data, cfg)
     harmonic, peaks, comb = spectral_evidence(data, cfg, refined=not legacy if refined is None else refined)
@@ -205,6 +213,17 @@ def track(data: Frames, profiles: dict, cfg: Settings, *, legacy: bool = False,
         frame_cost[i, :count, :count] = pair - 0.23 * np.exp(-0.5 * (distance / 0.09) ** 2)
 
     emission = frame_cost.reshape(-1, state_count)
+    if diagnostics is not None:
+        diagnostics.update(grid=grid, harmonic=harmonic, scores=scores, choices=grid[choices],
+                           frame_best=states[np.arange(len(states)), emission.argmax(axis=1)])
+    return states, emission, count
+
+
+def track(data: Frames, profiles: dict, cfg: Settings, *, legacy: bool = False,
+          transition_scale: float | None = None, refined: bool | None = None, diagnostics: dict | None = None) -> Tracks:
+    states, emission, count = pitch_candidates(data, profiles, cfg, legacy=legacy, refined=refined,
+                                               diagnostics=diagnostics)
+    state_count = states.shape[1]
     log_pitch = np.log2(np.maximum(states, 1))
     present = states > 0
     previous = emission[0].copy()
@@ -231,7 +250,4 @@ def track(data: Frames, profiles: dict, cfg: Settings, *, legacy: bool = False,
                                path // (count + 1) * (count + 1) + count))
     evidence = emission[np.arange(len(states)), path, None] - np.take_along_axis(emission, without, axis=1)
     confidence = np.where(selected > 0, np.clip((evidence + 0.03) / 0.34, 0, 1), 0)
-    if diagnostics is not None:
-        diagnostics.update(grid=grid, harmonic=harmonic, scores=scores, choices=grid[choices],
-                           frame_best=states[np.arange(len(states)), emission.argmax(axis=1)])
     return Tracks(selected, confidence)
