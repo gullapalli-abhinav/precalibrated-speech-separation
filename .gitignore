@@ -46,6 +46,15 @@ htmlcov/
 !/outputs/realtime/
 /outputs/realtime/*
 !/outputs/realtime/realtime_report.md
+!/outputs/realtime/sessions/
+/outputs/realtime/sessions/*
+!/outputs/realtime/sessions/README.md
+!/outputs/realtime/sessions/1(a_h)/
+!/outputs/realtime/sessions/2(s_h)/
+!/outputs/realtime/sessions/3(s_l)/
+!/outputs/realtime/sessions/4(a_l)/
+/outputs/realtime/sessions/*/*
+!/outputs/realtime/sessions/*/README.md
 *.zip
 *.npy
 *.npz

@@ -32,7 +32,7 @@ class App:
         self.duration = tk.StringVar(value="30")
         self.first = tk.StringVar(value="male")
         self.auto, self.record = tk.BooleanVar(value=True), tk.BooleanVar(value=False)
-        self.volume = tk.DoubleVar(value=.15)
+        self.volume = tk.DoubleVar(value=0)
         self.turn = {s:tk.StringVar(value="45") for s in SPEAKERS}
         self.rounds, self.fade = tk.StringVar(value="0"), tk.StringVar(value="20")
         self.status = tk.StringVar()
@@ -48,7 +48,7 @@ class App:
         actions.grid(row=2,columnspan=2,sticky="w")
         self.button(actions,"Refresh",self.refresh)
         self.button(actions,"Test input + quiet tone",self.audio_test)
-        ttk.Label(actions,text="Output volume").pack(side="left")
+        ttk.Label(actions,text="Playback volume").pack(side="left")
         ttk.Scale(actions,from_=0,to=1,variable=self.volume,length=120).pack(side="left")
         self.meters = []
         for row, name in enumerate(("Input level","Output level"),3):
