@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration, IDE state, credentials
+.vscode/
+.idea/
+.python-version
+.env
+.env.*
+!.env.example
+*credentials*
+*token*
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Supplied or user-provided voice recordings
+*.wav
+*.WAV
+*.flac
+*.mp3
+*.m4a
+*.ogg
+
+# Profiles contain speaker-specific voice-derived calibration data
+**/profiles.json
+**/*profile*.json
+
+# Generated audio, evaluation output and large experimental artifacts
+/outputs/
+*.zip
+*.npy
+*.npz
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
