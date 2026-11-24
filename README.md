@@ -22,8 +22,8 @@ The app saves the original mixture, both voice estimates, and the selected debat
 ## Review the project
 
 - [Micro-project report](docs/Group%23Report.docx) gives the method, results, and references.
-- [Four session guides](outputs/realtime/sessions/README.md) explain which tracks and figures to compare. Open them in the local project for the audio and figures.
+- [Four session guides](outputs/realtime/sessions/README.md) explain which tracks and figures to compare. The recordings and figures are available on GitHub.
 - [Technical notes](docs/realtime_dsp_architecture.md) cover the formulas and how to regenerate the plots. [Development results](outputs/realtime/realtime_report.md) document the controlled tests and device measurements.
 - [Older offline results](docs/offline-results/) accompany the [optimization report](docs/optimization_report.md). The original offline release is tagged `v0.1.0-offline`.
 
-Run `python -m unittest discover -s tests` with the project environment active. The historical recordings, voice profiles, and run logs are local project files.
+Run `python -m unittest discover -s tests` with the project environment active. Voice profiles and run logs are stored locally.

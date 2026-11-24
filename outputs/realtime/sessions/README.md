@@ -7,4 +7,4 @@ Each session contains the original microphone recording, the processed debate ou
 - [Session 3 (s_l)](<3(s_l)/README.md>)
 - [Session 4 (a_l)](<4(a_l)/README.md>)
 
-Open the guides from the local project to access the recordings and figures. These files are stored locally with the session calibration profiles.
+Open any guide to play or download its four WAV tracks and view the analysis PDFs.

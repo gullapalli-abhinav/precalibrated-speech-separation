@@ -2,7 +2,7 @@
 
 Listen to the original recording first, then compare it with the output the app selected during the debate.
 
-| Local audio file | What you hear |
+| Audio file | What you hear |
 | --- | --- |
 | [mixture.wav](mixture.wav) | Original microphone recording with both voices |
 | [selected.wav](selected.wav) | Processed output routed according to the debate turns |
@@ -11,10 +11,10 @@ Listen to the original recording first, then compare it with the output the app 
 
 The recording runs for 40.12 seconds. The selected track has 3.63 dB less total energy than the mixture. The difference includes any quiet or muted intervals and describes the overall output level.
 
-The plots are available in the local `analysis` folder.
+The plots are available in the `analysis` folder.
 
 1. [Pitch and autocorrelation](analysis/01_stacf_pitch.pdf)
 2. [Spectrum and separation masks](analysis/02_stft_spectral_masks.pdf)
 3. [Before-and-after spectrograms and energy](analysis/03_spectrogram_ste.pdf)
 
-Git contains this guide. The audio, plots, turn timings and calibration files are stored in the local project.
+If the GitHub player is unavailable, use the WAV file’s download button.
